@@ -36,7 +36,7 @@
                 <div class="numero" id="count-autocompactador">0</div>
                 <div class="label">Autocompactador</div>
             </div>
-            </div>
+        </div>
 
         <h2>Listado General de Contenedores</h2>
         <table id="tabla-contenedores">
@@ -54,11 +54,15 @@
         </table>
     </div>
 
-    <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.7/firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js"></script>
 
-    <script>
-        // 2. PEGAMOS TUS LLAVES DE CONEXIÓN (firebaseConfig)
+    <script type="module">
+        // 2. Importamos las funciones que necesitamos
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
+        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
+
+        // 3. Tus llaves de conexión (firebaseConfig)
         const firebaseConfig = {
             apiKey: "AIzaSyCLow5fPdKhvy8aS1LitOqJmNssUStdDPc",
             authDomain: "contenedores-recupac.firebaseapp.com",
@@ -69,21 +73,21 @@
             measurementId: "G-1GG7P3B164"
         };
 
-        // 3. Inicializamos Firebase
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
+        // 4. Inicializamos Firebase y Firestore
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
 
-        // 4. LÓGICA PARA LEER Y MOSTRAR LOS DATOS
+        // 5. LÓGICA PARA LEER Y MOSTRAR LOS DATOS (sintaxis moderna)
         const cuerpoTabla = document.getElementById('cuerpo-tabla');
         const countAbierto30 = document.getElementById('count-abierto30');
         const countAbierto20 = document.getElementById('count-abierto20');
         const countAutocompactador = document.getElementById('count-autocompactador');
+        
+        const colRef = collection(db, "contenedores");
 
-        // Esta función se ejecuta cada vez que hay un cambio en la base de datos
-        db.collection("contenedores").onSnapshot((querySnapshot) => {
+        onSnapshot(colRef, (querySnapshot) => {
             cuerpoTabla.innerHTML = ''; // Limpiamos la tabla
             
-            // Inicializamos los contadores para los indicadores
             let contAbierto30 = 0;
             let contAbierto20 = 0;
             let contAutocompactador = 0;
@@ -93,19 +97,14 @@
             } else {
                 querySnapshot.forEach((doc) => {
                     const data = doc.data();
-                    
-                    // Creamos una fila para la tabla
-                    const fila = `
-                        <tr>
-                            <td>${data.id_contenedor}</td>
-                            <td>${data.tipo_sda}</td>
-                            <td>${data.planta}</td>
-                            <td>${data.estado}</td>
-                        </tr>
-                    `;
+                    const fila = `<tr>
+                                    <td>${data.id_contenedor}</td>
+                                    <td>${data.tipo_sda}</td>
+                                    <td>${data.planta}</td>
+                                    <td>${data.estado}</td>
+                                </tr>`;
                     cuerpoTabla.innerHTML += fila;
 
-                    // Actualizamos los contadores si el contenedor está "Bueno"
                     if (data.estado === 'Bueno') {
                         if (data.tipo_sda === 'Abierto 30') contAbierto30++;
                         if (data.tipo_sda === 'Abierto 20') contAbierto20++;
@@ -114,7 +113,6 @@
                 });
             }
             
-            // Mostramos los totales en los indicadores
             countAbierto30.innerText = contAbierto30;
             countAbierto20.innerText = contAbierto20;
             countAutocompactador.innerText = contAutocompactador;
