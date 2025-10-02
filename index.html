@@ -2,17 +2,124 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inventario de Contenedores</title>
     <style>
-        body { font-family: sans-serif; background-color: #f4f7f9; }
-        .container { max-width: 800px; margin: 50px auto; padding: 20px; background-color: white; border-radius: 8px; }
-        h1 { color: #006845; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f7f9; margin: 20px; }
+        .container { max-width: 1200px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1, h2 { color: #006845; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .indicadores { display: flex; flex-wrap: wrap; gap: 20px; padding: 15px; background: #e8f5e9; border-radius: 5px; margin-bottom: 20px; }
+        .indicador { text-align: center; }
+        .indicador .numero { font-size: 2em; font-weight: bold; color: #006845; }
+        .indicador .label { font-size: 0.9em; color: #555; }
     </style>
 </head>
 <body>
+
     <div class="container">
-        <h1>Sistema de Inventario de Contenedores</h1>
-        <p>Plataforma en construcción.</p>
+        <h1>Dashboard de Inventario de Contenedores</h1>
+
+        <h2>Contenedores Operativos (Estado: Bueno)</h2>
+        <div class="indicadores" id="panel-indicadores">
+            <div class="indicador">
+                <div class="numero" id="count-abierto30">0</div>
+                <div class="label">Abierto 30</div>
+            </div>
+            <div class="indicador">
+                <div class="numero" id="count-abierto20">0</div>
+                <div class="label">Abierto 20</div>
+            </div>
+             <div class="indicador">
+                <div class="numero" id="count-autocompactador">0</div>
+                <div class="label">Autocompactador</div>
+            </div>
+            </div>
+
+        <h2>Listado General de Contenedores</h2>
+        <table id="tabla-contenedores">
+            <thead>
+                <tr>
+                    <th>ID Contenedor</th>
+                    <th>Tipo SDA</th>
+                    <th>Planta</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody id="cuerpo-tabla">
+                <tr><td colspan="4" style="text-align:center;">Cargando datos...</td></tr>
+            </tbody>
+        </table>
     </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.7/firestore-compat.js"></script>
+
+    <script>
+        // 2. PEGAMOS TUS LLAVES DE CONEXIÓN (firebaseConfig)
+        const firebaseConfig = {
+            apiKey: "AIzaSyCLow5fPdKhvy8aS1LitOqJmNssUStdDPc",
+            authDomain: "contenedores-recupac.firebaseapp.com",
+            projectId: "contenedores-recupac",
+            storageBucket: "contenedores-recupac.firebasestorage.app",
+            messagingSenderId: "1052331087102",
+            appId: "1:1052331087102:web:d37ad9048c7286214541af",
+            measurementId: "G-1GG7P3B164"
+        };
+
+        // 3. Inicializamos Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // 4. LÓGICA PARA LEER Y MOSTRAR LOS DATOS
+        const cuerpoTabla = document.getElementById('cuerpo-tabla');
+        const countAbierto30 = document.getElementById('count-abierto30');
+        const countAbierto20 = document.getElementById('count-abierto20');
+        const countAutocompactador = document.getElementById('count-autocompactador');
+
+        // Esta función se ejecuta cada vez que hay un cambio en la base de datos
+        db.collection("contenedores").onSnapshot((querySnapshot) => {
+            cuerpoTabla.innerHTML = ''; // Limpiamos la tabla
+            
+            // Inicializamos los contadores para los indicadores
+            let contAbierto30 = 0;
+            let contAbierto20 = 0;
+            let contAutocompactador = 0;
+
+            if (querySnapshot.empty) {
+                cuerpoTabla.innerHTML = '<tr><td colspan="4" style="text-align:center;">No hay contenedores registrados.</td></tr>';
+            } else {
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    
+                    // Creamos una fila para la tabla
+                    const fila = `
+                        <tr>
+                            <td>${data.id_contenedor}</td>
+                            <td>${data.tipo_sda}</td>
+                            <td>${data.planta}</td>
+                            <td>${data.estado}</td>
+                        </tr>
+                    `;
+                    cuerpoTabla.innerHTML += fila;
+
+                    // Actualizamos los contadores si el contenedor está "Bueno"
+                    if (data.estado === 'Bueno') {
+                        if (data.tipo_sda === 'Abierto 30') contAbierto30++;
+                        if (data.tipo_sda === 'Abierto 20') contAbierto20++;
+                        if (data.tipo_sda === 'Autocompactador') contAutocompactador++;
+                    }
+                });
+            }
+            
+            // Mostramos los totales en los indicadores
+            countAbierto30.innerText = contAbierto30;
+            countAbierto20.innerText = contAbierto20;
+            countAutocompactador.innerText = contAutocompactador;
+        });
+    </script>
+
 </body>
 </html>
