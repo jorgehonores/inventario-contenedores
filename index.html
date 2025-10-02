@@ -21,23 +21,12 @@
 
     <div class="container">
         <h1>Dashboard de Inventario de Contenedores</h1>
-
         <h2>Contenedores Operativos (Estado: Bueno)</h2>
         <div class="indicadores" id="panel-indicadores">
-            <div class="indicador">
-                <div class="numero" id="count-abierto30">0</div>
-                <div class="label">Abierto 30</div>
-            </div>
-            <div class="indicador">
-                <div class="numero" id="count-abierto20">0</div>
-                <div class="label">Abierto 20</div>
-            </div>
-             <div class="indicador">
-                <div class="numero" id="count-autocompactador">0</div>
-                <div class="label">Autocompactador</div>
-            </div>
+            <div class="indicador"><div class="numero" id="count-abierto30">0</div><div class="label">Abierto 30</div></div>
+            <div class="indicador"><div class="numero" id="count-abierto20">0</div><div class="label">Abierto 20</div></div>
+            <div class="indicador"><div class="numero" id="count-autocompactador">0</div><div class="label">Autocompactador</div></div>
         </div>
-
         <h2>Listado General de Contenedores</h2>
         <table id="tabla-contenedores">
             <thead>
@@ -54,15 +43,11 @@
         </table>
     </div>
 
-    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.7/firestore-compat.js"></script>
 
-    <script type="module">
-        // 2. Importamos las funciones que necesitamos
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
-        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
-
-        // 3. Tus llaves de conexión (firebaseConfig)
+    <script>
+        // Tus llaves de conexión
         const firebaseConfig = {
             apiKey: "AIzaSyCLow5fPdKhvy8aS1LitOqJmNssUStdDPc",
             authDomain: "contenedores-recupac.firebaseapp.com",
@@ -73,36 +58,26 @@
             measurementId: "G-1GG7P3B164"
         };
 
-        // 4. Inicializamos Firebase y Firestore
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+        // Inicializamos Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore(); // Usamos la sintaxis compat
 
-        // 5. LÓGICA PARA LEER Y MOSTRAR LOS DATOS (sintaxis moderna)
+        // LÓGICA PARA LEER Y MOSTRAR LOS DATOS
         const cuerpoTabla = document.getElementById('cuerpo-tabla');
         const countAbierto30 = document.getElementById('count-abierto30');
         const countAbierto20 = document.getElementById('count-abierto20');
         const countAutocompactador = document.getElementById('count-autocompactador');
-        
-        const colRef = collection(db, "contenedores");
 
-        onSnapshot(colRef, (querySnapshot) => {
-            cuerpoTabla.innerHTML = ''; // Limpiamos la tabla
-            
-            let contAbierto30 = 0;
-            let contAbierto20 = 0;
-            let contAutocompactador = 0;
+        db.collection("contenedores").onSnapshot((querySnapshot) => {
+            cuerpoTabla.innerHTML = '';
+            let contAbierto30 = 0, contAbierto20 = 0, contAutocompactador = 0;
 
             if (querySnapshot.empty) {
                 cuerpoTabla.innerHTML = '<tr><td colspan="4" style="text-align:center;">No hay contenedores registrados.</td></tr>';
             } else {
                 querySnapshot.forEach((doc) => {
                     const data = doc.data();
-                    const fila = `<tr>
-                                    <td>${data.id_contenedor}</td>
-                                    <td>${data.tipo_sda}</td>
-                                    <td>${data.planta}</td>
-                                    <td>${data.estado}</td>
-                                </tr>`;
+                    const fila = `<tr><td>${data.id_contenedor}</td><td>${data.tipo_sda}</td><td>${data.planta}</td><td>${data.estado}</td></tr>`;
                     cuerpoTabla.innerHTML += fila;
 
                     if (data.estado === 'Bueno') {
@@ -118,6 +93,5 @@
             countAutocompactador.innerText = contAutocompactador;
         });
     </script>
-
 </body>
 </html>
